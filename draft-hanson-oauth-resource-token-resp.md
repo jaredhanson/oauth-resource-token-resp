@@ -1,9 +1,37 @@
-# Abstract
+---
+title: "OAuth 2.0 Intended Resource Identification"
+abbrev: "Intended Resource Identification"
+category: std
+
+docname: draft-hanson-oauth-resource-token-resp-latest
+submissiontype: IETF
+number:
+date:
+consensus: true
+v: 3
+area: Security
+workgroup: Web Authorization Protocol
+keyword:
+  - oauth
+venue:
+  group: Web Authorization Protocol
+  type: Working Group
+  mail: oauth@ietf.org
+  github: jaredhanson/oauth-resource-token-resp
+
+author:
+  - fullname: Jared Hanson
+    organization: Keycard
+    email: jared@keycard.ai
+
+--- abstract
 
 This document specifies a new parameter `resource` that is used to explicitly
 include the resource identifier of the resource that the access token in the
 token response is intended for.  This `resource` parameter serves as an
 effective countermeasure to "mix-up attacks".
+
+--- middle
 
 # Introduction
 
