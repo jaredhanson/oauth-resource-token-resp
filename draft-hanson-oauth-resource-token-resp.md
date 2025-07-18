@@ -1,6 +1,6 @@
 ---
-title: "OAuth 2.0 Intended Resource Identification"
-abbrev: "Intended Resource Identification"
+title: OAuth 2.0 Intended Resource Identification
+abbrev: Intended Resource Identification
 category: std
 
 docname: draft-hanson-oauth-resource-token-resp-latest
@@ -20,8 +20,8 @@ venue:
   github: jaredhanson/oauth-resource-token-resp
 
 author:
-  - fullname: Jared Hanson
-    organization: Keycard
+  - name: Jared Hanson
+    org: Keycard
     email: jared@keycard.ai
 
 --- abstract
@@ -51,7 +51,7 @@ response.
 
 The `resource` parameter value is the resource identifier of the protected
 resource(s) for which the access token is intended, as defined by [Section 2](https://datatracker.ietf.org/doc/html/rfc8707#name-resource-parameter)
-of [RFC8707](https://datatracker.ietf.org/doc/html/rfc8707).  In the general
+of {{!RFC8707}}.  In the general
 case, the `resource` parameter is an array of strings, each containing a
 resource identifier.  In the special case when the access token is intended for
 a single protected resource, the `resource` parameter MAY be a string.
