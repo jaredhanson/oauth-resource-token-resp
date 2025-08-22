@@ -24,6 +24,17 @@ author:
     org: Keycard
     email: jared@keycard.ai
 
+informative:
+  MCP:
+    title: Model Context Protocol
+    target: https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization
+  Mastodon:
+    title: Mastodon
+    target: https://docs.joinmastodon.org/spec/oauth/
+  ATProto:
+    title: AT Protocol
+    target: https://atproto.com/specs/oauth
+
 --- abstract
 
 This document specifies a new parameter `resource` that is used to explicitly
@@ -38,13 +49,38 @@ effective countermeasure to "mix-up attacks".
 In traditional OAuth deployments, there is typically a pre-known relationship
 between authorization servers and the resource servers they protect.  Clients
 that request access to protected resources are manually registered ahead of
-time and understand the relationship issued access tokens and the protected
-resources for which those tokens are intended.
+time and understand the relationship between issued access tokens and the
+protected resources for which those tokens are intended.
 
 As OAuth evolves to support more loosely-coupled deployments, clients are
 dynamically discovering configuration using OAuth 2.0 Protected Resource Metadata
 {{!RFC9728}} and OAuth 2.0 Authorization Server Metadata {{!RFC8414}} and
 registering using OAuth 2.0 Dynamic Client Registration Protocol {{!RFC7591}}.
+Networks utilizing dynamic configuration include Model Context Protocol {{MCP}},
+Mastodon {{Mastodon}}, and AT Protocol {{ATProto}}.
+
+The token response of OAuth 2.0 does not include any information about the
+identity of the intended recipient of the access token issued in the response.
+Therefore, clients receiving an access token from the authorization server
+cannot be sure which resource(s) the token is intended for.  The lack of
+certainty about the intended receipient of a access token enables a class of
+attacks called "mix-up attacks".
+
+Mix-up attacks are a potential threat to all OAuth clients that interact with
+dynamically discovered resource servers.  When a resource servers is under an
+attacker's control, the attacker can launch a mix-up attack to acquire access
+tokens issued by a vulnerable authorization server.
+
+OAuth clients that interact with resource servers in a manner in which the
+authorization server is statically configured are not vulnerable to mix-up
+attacks.  However, when such clients interact with dynamically configured
+resource servers and authorization servers, they become vulnerable and need
+to apply countermeasures to mitigate mix-up attacks.
+
+Mix-up attacks aim to steal access tokens by tricking the client into sending
+the access token to the attacker instead of the intended resource server.  This
+marks a severe threat to the confidentiality and integrity of resources whose
+access is managed with OAuth.
 
 This document defines a new parameter in the token response called `resource`.
 The `resource` parameter allows the authorization server to explicitly include
