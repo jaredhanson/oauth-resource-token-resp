@@ -69,7 +69,7 @@ attacks called "mix-up attacks".
 Mix-up attacks are a potential threat to all OAuth clients that interact with
 dynamically discovered resource servers.  When a resource servers is under an
 attacker's control, the attacker can launch a mix-up attack to acquire access
-tokens issued by a vulnerable authorization server.
+tokens issued by a vulnerable authorization server through an honest client.
 
 OAuth clients that interact with resource servers in a manner in which the
 authorization server is statically configured are not vulnerable to mix-up
@@ -95,17 +95,17 @@ an effective countermeasure to mix-up attacks.
 
 # Response Parameter resource
 
-In token responses to the client, an authorization server supporting this
+In access token responses to the client, an authorization server supporting this
 specification MUST indicate the identity of the protected resource(s) for which
 the access token is intended by including the `resource` parameter in the
 response.
 
 The `resource` parameter value is the resource identifier of the protected
 resource(s) for which the access token is intended, as defined by [Section 2](https://datatracker.ietf.org/doc/html/rfc8707#name-resource-parameter)
-of {{!RFC8707}}.  In the general
-case, the `resource` parameter is an array of strings, each containing a
-resource identifier.  In the special case when the access token is intended for
-a single protected resource, the `resource` parameter MAY be a string.
+of {{!RFC8707}}.  In the general case, the `resource` parameter is an array of
+strings, each containing a resource identifier.  In the special case when the
+access token is intended for a single protected resource, the `resource`
+parameter MAY be a string.
 
 ## Example Token Response
 
@@ -113,33 +113,47 @@ The following example shows a token response from the authorizaiton server
 where the access token is intended for the resource whose resource identifier is
 `https://rs.example.com/`:
 
-HTTP/1.1 200 OK
-Content-Type: application/json;charset=UTF-8
-Cache-Control: no-store
-Pragma: no-cache
+    HTTP/1.1 200 OK
+    Content-Type: application/json;charset=UTF-8
+    Cache-Control: no-store
+    Pragma: no-cache
 
-{
-  "access_token":"2YotnFZFEjr1zCsicMWpAA",
-  "token_type":"example",
-  "expires_in":3600,
-  "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA",
-  "resource":"https://rs.example.com/"
-}
+    {
+      "access_token":"2YotnFZFEjr1zCsicMWpAA",
+      "token_type":"example",
+      "expires_in":3600,
+      "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA",
+      "resource":"https://rs.example.com/"
+    }
 
 ## Providing the Resource Identifier
 
 Resource servers supporting this specification MUST provide their resource
 identifier to enable clients to validate the `resource` parameter effectively.
-The recommended approach is [RFC9728](https://datatracker.ietf.org/doc/html/rfc9728).
 
-TODO: Clarify this section.
+For resource servers publishing metadata according to {{!RFC9728}}, the resource
+identifier included in the servers metadata value `resource` MUST be identical
+to the `resource` parameter's value in the token response.
+
+Resource servers MAY additionally provide the resource identifier to clients by
+any other mechanism, which is outside of the scope of this specification.
 
 ## Validating the Resource Identifier
 
-TODO: Add this section.
+Clients that support this specification MUST extract the value of the `resource`
+parameter from token responses they receive if the parameter is present.
+Clients MUST then compare the result to the resource identifier of the protected
+resource it is interacting with.  This comparison MUST use simple string
+comparison as defined in Section 6.2.1 of {{!RFC3986}}.  If the value does not
+match the expected resource identifier, the access token contained in the
+response MUST NOT be used.
 
-More precisely, clients that interact with resource servers
-...
+More precisely, clients that interact with resource servers servers supporting
+OAuth metadata {{!RFC9728}} MUST compare the `resource` parameter value to the
+`resource` value in the protected resource's metadata document.  If OAuth
+metadata is not used, clients MUST use deployment-specific ways (for example, a
+static configuration) to decide if the returned `resource` value is the expected
+value in the current flow.
 
 # Authorization Server Metadata
 
